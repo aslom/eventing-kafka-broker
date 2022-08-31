@@ -330,7 +330,15 @@ public class KubernetesAuthProviderTest {
     assertThat(credentials.caCertificates()).isEqualTo(data.get(KubernetesCredentials.CA_CERTIFICATE_KEY));
     assertThat(credentials.SASLUsername()).isEqualTo(data.get(KubernetesCredentials.USERNAME_KEY));
     assertThat(credentials.SASLPassword()).isEqualTo(data.get(KubernetesCredentials.PASSWORD_KEY));
-    assertThat(credentials.skipClientAuth()).isEqualTo(data.containsKey(KubernetesCredentials.USER_SKIP_KEY));
+    boolean noUserCert = credentials.userCertificate() == null || credentials.userCertificate().isBlank();
+    boolean noUserKey = credentials.userKey() == null || credentials.userKey().isBlank();
+    boolean dataContainsKeyUserSkip = data.containsKey(KubernetesCredentials.USER_SKIP_KEY);
+    boolean skipClientAuthCond = dataContainsKeyUserSkip || (noUserCert && noUserKey);
+    boolean credentialsSkipClientAuth = credentials.skipClientAuth();
+    boolean cond = credentialsSkipClientAuth == skipClientAuthCond;
+    System.err.println(">>>>>>>>>>>>>>>>>>>>>>> verifyCredentials COND="+cond+" credentialsSkipClientAuth="+credentialsSkipClientAuth+" skipClientAuthCond="+skipClientAuthCond+ " dataContainsKeyUserSkip="+dataContainsKeyUserSkip+" credentials.userCertificate()="+credentials.userCertificate()+" credentials.userKey()="+credentials.userKey()+" noUserCert="+noUserCert+" noUserKey="+noUserKey+" credentials.skipClientAuth()="+credentials.skipClientAuth());
+    assertThat(credentialsSkipClientAuth).isEqualTo(skipClientAuthCond);
+    System.err.println("verifyCredentials asserted ALL OK");
   }
 
   private static Secret getSecret(final Map<String, String> data, final String name) {
